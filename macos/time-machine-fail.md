@@ -20,6 +20,7 @@ HDD는 두 개가 연결되어있고 라즈베리파이 공급되는 2.5A로는 
 먼저 Raspberrypi에서 `fsck.hfsplus [disk]`를 실행한다.
 
 그래도 안되면 `umount` 하였다가 다시 `mount -a`를 해보고
+> 작업중으로 안하여 `umount`가 안되면 `-R` 옵션을 활용하자.
 
 다시 안될시 reboot을 한다. 
 
