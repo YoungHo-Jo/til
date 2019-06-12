@@ -11,7 +11,7 @@ JVM 덕에 **Write Once Run Anywhere(WORA)**가 가능
 
 ## 구성
 
-![](%5BJRE%5D%20JVM/822702B2-60C6-4CDE-892B-E333EDF9D78F.png)
+![](JRE-JVM/822702B2-60C6-4CDE-892B-E333EDF9D78F.png)
 
 
 ### Class Loader Subsystem
@@ -152,7 +152,7 @@ null
 sun.misc.Launcher$AppClassLoader@73d16e93
 ```
 
-![](%5BJRE%5D%20JVM/EC8F28FF-634F-436A-BE4F-933BC52A3291.png)
+![](JRE-JVM/EC8F28FF-634F-436A-BE4F-933BC52A3291.png)
 
 - - - -
 
@@ -188,7 +188,7 @@ thread 별로 PC registers를 가지며, 현재 어디 주소를 실행중인지
 #### Native method stacks
 모든 thread마다, 이부분을 각자 갖음
 native method information을 저장
-![](%5BJRE%5D%20JVM/53CBEFA4-59EE-47A7-93D9-515F608C924C.png)
+![](JRE-JVM/53CBEFA4-59EE-47A7-93D9-515F608C924C.png)
 
 
 - - - -
