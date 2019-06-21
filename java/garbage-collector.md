@@ -1,12 +1,15 @@
 # Garbage Collector
 
+#ProgrammingLanguage/Java
 
 출처: [NAVER D2](https://d2.naver.com/helloworld/1329)
+[성능튜닝 가비지 컬렉터(GC) 이해하기](https://12bme.tistory.com/57)
 
 
 ## Garbage
 > 주소를 잃어버려서 사용할 수 없는 메모리  
 > **Dangling Object**  
+![](garbage-collector/bear_sketch@2x.png)
 
 - - - -
 
@@ -24,46 +27,70 @@
 
 * GC실행하는 Thread 제외하고 나머지 Thread 모두 멈춤
 * 작업을 끝낸후 재개
-* 대개, **GC 튜닝**은 **stop-thw-world** 시간을 줄이는 것
+* 대개, **GC 튜닝**은 **stop-the-world** 시간을 줄이는 것
+* ![](garbage-collector/bear_sketch@2x%202.png)
 
 * 명시적 메모리 해제를 위해 `null` 사용하거나, `System.gc()` 를 부를떄, `null`은 괜찮으나, 후자는 절대 사용하면 안됨
+- - - -
 
 ### 가정 / 전제조건
 #### Weak Generational Hypothesis
 * 대부분의 객체는 금방 접근 불가능한 상태(unreachable) 
 * 오래된 객체에서 젊은 객체로의 참조는 아주 적게 존재
 
+- - - -
+
 ### HotSpot JVM
 크게 2개의 물리 공간으로 나눔
+
+![](garbage-collector/22296F3C58FF0CA120.jpeg)
+
+![](garbage-collector/bear_sketch@2x%203.png)
 
 #### Young 영역(Young Generation 영역)
 * 새롭게 생성된 객체 대부분 여기
 * 대부분의 객체가 **금방 접근 불가능한 생태**가 되기 때문에 생성되었다가 사라짐 -> 사라질 때 **Minor GC 발생**한다고 함
-* 총 3게의 영역으로 나누어짐
+* 총 3개의 영역으로 나누어짐
+> **Minor GC**  
+> Young 영역에서 일어나는 GC  
+> **Major GC**  
+> Old 영역이나 Perm 영역에서 일어나는 GC  
+
 
 ##### Eden 영역
 * **새로 생성한 대부분의 객체**는 여기에 위치
 * GC 한 번 발생 후 살아남으면 Survivor 영역으로 옮겨짐
 * -> Survivor 영역으로 객체가 계속 쌓임 
+Survivor 영역 중 하나는 항상 **비워진** 상태여야하기 때문에, 비워져있지 않은 Survivor영역으로 Minor GC에서 살아남은 객체가 이동한다. 
 
-##### Survivor 영역(2개)
-* 하나가 가득차면 살아남은 객체를 다른 영역으로 이동 -> 가득찬 영역은 비워짐
+
+
+
+##### Survivor 영역(2개)(to, from)
+* 하나가 가득차면 살아남은 객체를 다른 영역(다른 survivor 혹은 old)으로 이동 -> 가득찬 영역은 비워짐
 
 위의 과정을 반복하다가 살아남은 객체는 Old로 이동
+
+
 
 ##### 특징
 * Survivor 영역 중 하나는 반드시 비어있는 상태로 남아짐
 
 ![](garbage-collector/E526B6C6-F650-47B2-A1A8-3A1662D876B7.png)
 
+**이러한 이동과정은 병목이 발생하기 떄문에 성능에 영향을 준다**
+
 #### HotSpot JVM 의 특징
-빠른 메모리 할당을 위해 -> bump-the-pointer & TLABs(Thread-Level Allocation Buffers)
+빠른 메모리 할당을 위해 -> ~bump-the-pointer~ & ~TLABs(Thread-Level Allocation Buffers)~
+
+
 #### bump-the-pointer
 * Eden 영역에 할당된 마지막 객체 추적
 * 마지막 객체는 맨 위(top)에 있음
 * 다음 생성시 이 할당공간에 넣기 적당한지 판단
 * 적당할시 넣고, 새로 생성된 객체는 Top에 존재
 * -> 새로운 객체 생성시 마지막에 추가된 객체만 점검 -> 빠른 메모리 할당
+![](garbage-collector/bear_sketch@2x%204.png)
 
 ##### 문제점
 * Multi Thread 환경에서는 lock이 발생할 수 밖에 없음
@@ -75,6 +102,7 @@
 * 쓰레드는 자기 영역만 접근 가능
 * 자기 영역에 대한 **bump-the-pointer** 적용
 
+![](garbage-collector/bear_sketch@2x%205.png)
 
 #### Old 영역(Old Generation 영역)
 * **접근 불가능한 생태**가 되지 않아 Young 영역에서 살아남은 객체들이 복사되는 곳
@@ -99,11 +127,19 @@
 * CPU 코어가 **하나** 만 있을때 사용하기 위함
 * 처리하는 쓰레드가 **1개**
 
+![](garbage-collector/2703E43958FF0CD22F.jpeg)
+1. 살아있는 객체는 Eden에 존재
+2. Eden 꽉 차면 To Survivor 영역으로 이동한다. 너무 크면 바로 Old로 이동한다. From Survivor에 살아있는 객체를 To Survivor로 이동시킨다.
+3. To Survivor 꽉 찼을 경우, Eden 영역이나 From Survivor 영엑에 남아있는 객체들을 Old로 옮긴다.
+4. 이후 Old 영역과 Perm영역은 **Mark-Sweep-Compact** 콜렉션 알고리즘에 따라 진행한다.
+
 **mark-sweep-compact** 알고리즘 
 1. Old 영역에 살아있는 객체 식별(**Mark**)
 2. Heap 앞 부분 부터 확인하여 살아 있는 것만 남김(**Sweep**)
 3. 객체들을 연속적으로 쌓이게 해, Heap의 가장 앞 부분 부터 채움
 -> 객체 존재하는 부분 / 아닌 부분 나눔(**Compaction**)
+
+![](garbage-collector/bear_sketch@2x%206.png)
 
 > 적은 메모리와 CPU 코어 개수가 적을 때 적합  
 
